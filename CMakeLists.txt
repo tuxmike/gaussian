@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(CVT_RDF CXX C)
+
+find_package(CVT_DEBUG REQUIRED )
+
+###########
+## Build ##
+###########
+
+SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+
+include_directories(
+  ${CVT_INCLUDE_DIRS}
+)
+
+ADD_EXECUTABLE( gaussian
+  gaussian.cpp
+)
+TARGET_LINK_LIBRARIES( gaussian
+  ${CVT_LIBRARIES}
+)
