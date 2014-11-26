@@ -14,9 +14,9 @@ struct BivGaussParams
 {
   float m_x;
   float m_y;
-  float s_x;
-  float s_y;
-  float corr;
+  float c_1;
+  float c_23;
+  float c_4;
 };
 
 typedef std::array<float, COMPONENTS> CompArr;
@@ -27,18 +27,23 @@ typedef std::array<float, COMPONENTS> CompArr;
  */
 float biv_normal_d(float x, float y, const BivGaussParams& bgp )
 {
+	float covDet = bgp.c_1 * bgp.c_4 - bgp.c_23 * bgp.c_23;
 
-    float a = 1.0f - ( bgp.corr * bgp.corr );
-    float b = 1.0f / (2.0f * M_PI * std::sqrt( a ) );
-    float c = -1.0f / ( 2 * a);
-    float d = ( x - bgp.m_x );
-    float e = ( y - bgp.m_y );
-    float f = ( d*d ) / ( bgp.s_x * bgp.s_x );
-    float g = ( e*e ) / ( bgp.s_y * bgp.s_y );
-    float h = ( 2.0f * bgp.corr * d * e ) / ( bgp.s_x * bgp.s_y );
-    float i = c * ( f + g - h );
-    float j = b * std::exp( i );
-    return b * std::exp( i );
+	float a = 1.0f / (2.0f * M_PI * std::sqrt( covDet ) );
+	float covDet_inv = 1.0f / covDet;
+	float c_inv_1 = bgp.c_4 * covDet_inv;
+	float c_inv_23 = - bgp.c_23 * covDet_inv;
+	float c_inv_4 = bgp.c_1 * covDet_inv;
+
+    float d_x = x - bgp.m_x;
+    float d_y = y - bgp.m_y;
+
+    float e = d_x * c_inv_1 + d_y * c_inv_23;
+    float f = d_x * c_inv_23 + d_y * c_inv_4;
+
+    float g = e * d_x + f * d_y;
+
+    return a * std::exp( -0.5f * g );
 }
 
 
@@ -115,9 +120,9 @@ void mstep( CompArr& weights,
 			p_sx_sy += dx * dy * w_i_k;
 		}
 
-		paramsK.s_x = std::sqrt( n_k_inv * sx_2);
-		paramsK.s_y = std::sqrt( n_k_inv * sy_2);
-		paramsK.corr = p_sx_sy / ( paramsK.s_x * paramsK.s_y );
+		paramsK.c_1 = n_k_inv * sx_2;
+		paramsK.c_4 = n_k_inv * sy_2;
+		paramsK.c_23 = n_k_inv * p_sx_sy;
 
 	}
 
@@ -142,7 +147,7 @@ void drawGaussians(cvt::Image& img, std::array< BivGaussParams, COMPONENTS >& ga
 		for( unsigned y = 0; y < img.height(); y++ ) {
 			for( unsigned x = 0; x < img.width(); x++ ) {
 				float val = biv_normal_d( x, y, gaussians[ k ] ) * weights [ k ];
-				imgMap( x, y ) += val;
+				imgMap( x, y ) += 255.0f * val;
 			}
 		}
 	}
@@ -151,22 +156,16 @@ void drawGaussians(cvt::Image& img, std::array< BivGaussParams, COMPONENTS >& ga
 int main(int argc, char *argv[])
 {
 
-  /*
-  std::vector< cvt::Vector2i > dataset = { cvt::Vector2i( 10, 8), cvt::Vector2i(12, 8), cvt::Vector2i(12, 12),
-		  cvt::Vector2i(4, 16), cvt::Vector2i(2, 16), cvt::Vector2i(6, 14), cvt::Vector2i(8, 9), cvt::Vector2i(10, 10),
-		  cvt::Vector2i(24, 8), cvt::Vector2i(16, 8), cvt::Vector2i(46, 10), cvt::Vector2i(10, 16), cvt::Vector2i(8, 4),
-		  cvt::Vector2i(6, 15), cvt::Vector2i(6, 17), cvt::Vector2i(2, 5), cvt::Vector2i(13, 17), cvt::Vector2i(7, 9),
-		  cvt::Vector2i(18, 6), cvt::Vector2i(4, 2), cvt::Vector2i(14, 7), cvt::Vector2i(10, 12), cvt::Vector2i(16, 12) };
-  */
-
   auto const seed = std::random_device()();
   std::mt19937 rand_generator = std::mt19937 ( seed );
-  std::uniform_int_distribution< int > distribution( 50, 150 );
+  std::uniform_int_distribution< int > distribution( 0, 100 );
+  std::uniform_int_distribution< int > distribution2( 0, 25 );
 
   std::vector< cvt::Vector2i > dataset;
 
   for( unsigned i = 0; i < 100; i++ ) {
-	  cvt::Vector2i vec( distribution( rand_generator ), distribution( rand_generator ) );
+	  int upDown = ( distribution( rand_generator ) < 50 ) ? 75 : 125;
+	  cvt::Vector2i vec( distribution( rand_generator ) + 50, distribution2( rand_generator ) + upDown );
 	  dataset.push_back( vec );
   }
 
@@ -184,23 +183,23 @@ int main(int argc, char *argv[])
 	  BivGaussParams& gaussParam = params[ k ];
 	  gaussParam.m_x = dataset[ k ].x;
 	  gaussParam.m_y = dataset[ k ].y;
-	  gaussParam.s_x = 10.0f;
-	  gaussParam.s_y = 10.0f;
-	  gaussParam.corr = 0.0f;
+	  gaussParam.c_1 = 100.0f;
+	  gaussParam.c_4 = 100.0f;
+	  gaussParam.c_23 = 0.0f;
   }
 
-  unsigned iteration = 1;
+  unsigned iteration = 0;
 
   std::cout << "Weights:" << weights[0] << "," << weights[1] << "," << weights[2] << "," << weights[3] << "," << weights[4] << std::endl;
-  std::cout << "Params:" << params[0].m_x << "," << params[0].m_y << "," << params[0].s_x << "," << params[0].s_y << "," << params[0].corr << std::endl;
+  std::cout << "Params:" << params[0].m_x << "," << params[0].m_y << "," << params[0].c_1 << "," << params[0].c_1 << "," << params[0].c_23 << std::endl;
 
-  while ( iteration++ < 2 )
+  while ( iteration++ < 20 )
   {
 	  estep( weights, memberWeights, params, dataset );
 	  mstep( weights, memberWeights, params, dataset );
 
 	  std::cout << "Weights:" << weights[0] << "," << weights[1] << "," << weights[2] << "," << weights[3] << "," << weights[4] << std::endl;
-	  std::cout << "Params:" << params[0].m_x << "," << params[0].m_y << "," << params[0].s_x << "," << params[0].s_y << "," << params[0].corr << std::endl;
+	  std::cout << "Params:" << params[0].m_x << "," << params[0].m_y << "," << params[0].c_1 << "," << params[0].c_1 << "," << params[0].c_23 << std::endl;
   }
 
   cvt::Image img( 200, 200, cvt::IFormat::GRAY_FLOAT );
