@@ -79,11 +79,12 @@ void mstep( CompArr& weights,
 	n_k.fill( 0.0f );
 
 	// update weights
+	const float n = dataset.size();
 	for( unsigned k = 0; k < COMPONENTS; k++ ) {
 		for( unsigned i = 0; i < dataset.size(); i++ ) {
 			n_k[ k ] += memberWeights[ i ][ k ];
 		}
-		weights[ k ] = n_k[ k ] / dataset.size();
+		weights[ k ] = n_k[ k ] / n;
 	}
 
 	// update gauss params
@@ -158,14 +159,15 @@ int main(int argc, char *argv[])
 
   auto const seed = std::random_device()();
   std::mt19937 rand_generator = std::mt19937 ( seed );
-  std::uniform_int_distribution< int > distribution( 0, 100 );
-  std::uniform_int_distribution< int > distribution2( 0, 25 );
+  std::uniform_int_distribution< int > d_50_150( 50, 150 );
+  std::uniform_int_distribution< int > d_25_75( 25, 75 );
+  std::bernoulli_distribution distribution2( 0.5f );
 
   std::vector< cvt::Vector2i > dataset;
 
   for( unsigned i = 0; i < 100; i++ ) {
-	  int upDown = ( distribution( rand_generator ) < 50 ) ? 75 : 125;
-	  cvt::Vector2i vec( distribution( rand_generator ) + 50, distribution2( rand_generator ) + upDown );
+      int upDown = ( distribution2( rand_generator ) ) ? 0 : 100;
+      cvt::Vector2i vec( d_50_150( rand_generator ), d_25_75( rand_generator ) + upDown );
 	  dataset.push_back( vec );
   }
 
@@ -190,25 +192,25 @@ int main(int argc, char *argv[])
 
   unsigned iteration = 0;
 
-  std::cout << "Weights:" << weights[0] << "," << weights[1] << "," << weights[2] << "," << weights[3] << "," << weights[4] << std::endl;
-  std::cout << "Params:" << params[0].m_x << "," << params[0].m_y << "," << params[0].c_1 << "," << params[0].c_1 << "," << params[0].c_23 << std::endl;
-
   while ( iteration++ < 20 )
   {
+      cvt::Image img( 200, 200, cvt::IFormat::GRAY_FLOAT );
+      img.fill( cvt::Color::BLACK );
+      drawData( img, dataset );
+      drawGaussians( img, params, weights );
+
+      cvt::String file;
+      file.sprintf( "out%i.png", iteration );
+      img.save( file );
+
+      std::cout << "Weights:" << weights[0] << "," << weights[1] << "," << weights[2] << "," << weights[3] << "," << weights[4] << std::endl;
+      std::cout << "Params:" << params[0].m_x << "," << params[0].m_y << "," << params[0].c_1 << "," << params[0].c_1 << "," << params[0].c_23 << std::endl;
+      std::cout << "MWeights:" << memberWeights[0][0] << "," << memberWeights[0][1] << "," << memberWeights[0][2] << "," << memberWeights[0][3] << "," << memberWeights[0][4] << std::endl;
+
 	  estep( weights, memberWeights, params, dataset );
 	  mstep( weights, memberWeights, params, dataset );
 
-	  std::cout << "Weights:" << weights[0] << "," << weights[1] << "," << weights[2] << "," << weights[3] << "," << weights[4] << std::endl;
-	  std::cout << "Params:" << params[0].m_x << "," << params[0].m_y << "," << params[0].c_1 << "," << params[0].c_1 << "," << params[0].c_23 << std::endl;
   }
-
-  cvt::Image img( 200, 200, cvt::IFormat::GRAY_FLOAT );
-  img.fill( cvt::Color::BLACK );
-  drawData( img, dataset );
-  drawGaussians( img, params, weights );
-
-  img.save( "out.png" );
-
 
   return 0;
 }

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(CVT_RDF CXX C)
+project(Gaussian CXX C)
 
 find_package(CVT_DEBUG REQUIRED )
 
@@ -17,5 +17,12 @@ ADD_EXECUTABLE( gaussian
   gaussian.cpp
 )
 TARGET_LINK_LIBRARIES( gaussian
+  ${CVT_LIBRARIES}
+)
+
+ADD_EXECUTABLE( gaussian_online
+  gaussian_online.cpp
+)
+TARGET_LINK_LIBRARIES( gaussian_online
   ${CVT_LIBRARIES}
 )
