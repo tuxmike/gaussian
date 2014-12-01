@@ -33,7 +33,7 @@ private:
 	size_t n;
 
   public:
-	GaussianMixture():
+	GaussianMixture( float s_x = 100.0f, float s_y = 100.0f ):
 		n( 0 )
     {
 		weights.fill( 0.0f );
@@ -44,8 +44,8 @@ private:
 		  BivGaussParams& gaussParam = params[ k ];
 		  gaussParam.m_x = 0.0f;
 		  gaussParam.m_y = 0.0f;
-		  gaussParam.c_1 = 200.0f;
-		  gaussParam.c_4 = 200.0f;
+		  gaussParam.c_1 = s_x;
+		  gaussParam.c_4 = s_y;
 		  gaussParam.c_23 = 0.0f;
 		}
     }
@@ -102,6 +102,15 @@ private:
 					imgMap( x, y ) += 255.0f * val;
 				}
 			}
+		}
+	}
+
+	void outputParams() {
+		for( unsigned k = 0; k < COMPONENTS; k++ ) {
+			std::cout << "[Component " << k << " " << weights[ k ] << "]" <<
+			" mx: " << params[ k ].m_x << " my: " << params[ k ].m_y <<
+			" c_1: " << params[ k ].c_1 << " c_4: " << params[ k ].c_4 << " c_23: " << params[ k ].c_23 <<
+			std::endl;
 		}
 	}
 
