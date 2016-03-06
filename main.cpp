@@ -1,5 +1,7 @@
 #include "GaussianMixture.h"
 
+#include <iostream>
+
 int main(int argc, char *argv[])
 {
 
@@ -9,6 +11,7 @@ int main(int argc, char *argv[])
 	std::uniform_int_distribution< int > d_25_75( 25, 75 );
 	std::bernoulli_distribution distribution2( 0.5f );
 
+	// Gaussian Mixture with 2 gaussians
 	GaussianMixture<2> gm;
 
 	// fill gm with 500 datapoints
@@ -21,8 +24,14 @@ int main(int argc, char *argv[])
 		gm.addDatapoint( x, y );
 	}
 	
-	std::cout << gm << std::endl;
-	std::cout << "Entropy: " << gm.getShannonEntropy() << " Mean: " << gm.getMean() << " Variance:" << gm.getVariances() << std::endl;
+	// print components parameters, for our simple example they should form two spots: 100,50 and 100,150 
+	std::cout << gm;
+	
+	std::pair< float, float > mean = gm.getMean();
+	std::pair< float, float > variances = gm.getVariances();
+
+	// print mixture properties
+	std::cout << "Entropy: " << gm.getShannonEntropy() << " Mean: " << mean.first << "," << mean.second << " Variance:" << variances.first << "," << variances.second << std::endl;
 
 	return 0;
 }

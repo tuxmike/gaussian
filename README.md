@@ -1,7 +1,7 @@
-Simple 2D - Gaussian Mixture Model
+#Simple 2D - Gaussian Mixture Model
 
-Simple Gaussian Mixture Model with Online Expectation maximisation Algorithm, based on Allou Samé and Christophe Ambroise and Gérard Govaert
-("An online classification {EM} algorithm based on the mixture model", Statistics and Computing 2007)
+Simple **Gaussian Mixture Model** with **_Online_ Expectation Maximisation** algorithm, based on Allou Samé and Christophe Ambroise and Gérard Govaert
+("An online classification EM algorithm based on the mixture model", Statistics and Computing 2007)
 
 Usage:
 ```C++
@@ -11,6 +11,11 @@ gm.addDatapoint( x, y );
 gm.addDatapoint( x, y );
 BivGaussParams g0 = gm.getGaussian(0);
 BivGaussParams g1 = gm.getGaussian(1);
+gm.addDatapoint( x, y );
+...
+gm.addDatapoint( x, y );
+BivGaussParams g1 = gm.getGaussian(1);
+...
 ```
 
 Copyright (c) 2016 Michael Reithmeier

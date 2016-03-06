@@ -1,9 +1,26 @@
+/*
+Simple 2D - Gaussian Mixture Model
+
+Copyright (c) 2016 Michael Reithmeier
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
+
 #ifndef GAUSSIANMIXTURE_H_
 #define GAUSSIANMIXTURE_H_
 
 #define _USE_MATH_DEFINES
 #include <array>
 #include <cmath>
+#include <algorithm>
+#include <utility>
+#include <ostream>
+
 
 struct BivGaussParams
 {
@@ -160,17 +177,17 @@ private:
 	/**
 	 * Get number of Components 
 	 */
-	inline size_t size() const { return COMPONENTS; }
+	size_t size() const { return COMPONENTS; }
 
 	/**
 	 * Get number of added Datapoints
 	 */
-	inline size_t getN() const { return n; }
+	size_t getN() const { return n; }
 
 	/**
 	 * Get gaussian parameters for k-th component
 	 */
-	const BivGaussParams& getGaussian( size_t k )
+	const BivGaussParams& getGaussian( size_t k ) const
 	{
 		return gaussians[ k ];
 	}
@@ -178,7 +195,7 @@ private:
 	/**
 	 * Get weight parameter for k-th component
 	 */
-	float getWeight( size_t k )
+	float getWeight( size_t k ) const
 	{
 		return gaussians[ k ].weight;
 	}
@@ -186,7 +203,7 @@ private:
 	/**
 	 * Get number of added datapoints for k-th component
 	 */
-    size_t getNK( size_t k )
+    size_t getNK( size_t k ) const
 	{
 		return gaussians[ k ].n_k;
 	}
@@ -264,13 +281,14 @@ private:
 	/**
 	* Print paramters
 	*/
+	template< size_t T>
 	friend std::ostream& operator<<( std::ostream& os, const GaussianMixture<T>& gm )
 	{
-		for( unsigned k = 0; k < gn.size(); k++ ) {
+		for( unsigned k = 0; k < T; k++ ) {
 			const BivGaussParams& g = gm.getGaussian( k );
 			os << "[Component " << k << " " << g.weight << "]" <<
 			" mx: " << g.m_x << " my: " << g.m_y <<
-			" c_1: " << g.c_1 << " c_4: " << g.c_4 << " c_23: " << g.c_23;
+			" c_1: " << g.c_1 << " c_4: " << g.c_4 << " c_23: " << g.c_23 << std::endl;
 		}
 	}
 
